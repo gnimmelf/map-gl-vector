@@ -2,9 +2,9 @@ import * as THREE from 'three'
 //@ts-expect-error
 import earcut from 'earcut';
 
-import { dir, waitForProperty } from '../utils'
+import { dir, flags, waitForProperty } from '../utils'
 import { GeoProjector } from '../GeoProjector';
-import { ElevationMap } from './ElevationMap';
+import { ElevationMap } from '../ElevationMap';
 
 type GeoJSON = {
     type: string;
@@ -159,7 +159,7 @@ export class GeoJsonLayer {
 
     #latLngToVector3(latLng: [number, number], ) {
         const layerCoord = this.projector!.normalize(latLng)
-        const elevation = this.elevationMap
+        const elevation = this.elevationMap && flags.elevation
             ? this.elevationMap.getElevationAt(latLng, this.projector!.options.fromProjection)
             : 0;
         return new THREE.Vector3(layerCoord[0], layerCoord[1], elevation);

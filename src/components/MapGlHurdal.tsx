@@ -3,17 +3,18 @@ import { createStore } from "solid-js/store";
 
 import * as dat from "lil-gui";
 import * as THREE from "three";
-import { CSS2DRenderer } from "three/addons/renderers/CSS2DRenderer.js";
 
 import { MapControls } from "../lib/three-js/MapControls";
 import { CompassRose } from "../lib/three-js/CompassRose";
 import { MapMarkers } from "../lib/three-js/MapMarkers";
 import { GeoProjector } from "../lib/GeoProjector";
-import { dir, flags, stringToBool } from "../lib/utils";
+import { flags } from "../lib/utils";
 import { Version } from "./Version";
 import { LayerContainer } from "../lib/three-js/LayerContainer";
 import { GeoJsonLayer } from "../lib/three-js/GeoJsonLayer";
-import { ElevationMap } from "../lib/three-js/ElevationMap";
+import { ElevationMap } from "../lib/ElevationMap";
+
+import { GroundMap } from "../lib/three-js/GroundMap";
 
 /**
  * Constants
@@ -36,10 +37,6 @@ const VIEW = {
 const MAP = {
   elevationMapUrl: new URL("https://localhost:3030/assets/output_final.tif"),
   bounds: {
-    // minLat: 10.66698710844047,
-    // minLng: 60.33636918184986,
-    // maxLat: 11.147280359235149,
-    // maxLng: 60.51791684203125,
     minLat: 10.660282896249676,
     minLng: 60.31796830024959,
     maxLat: 11.147154251739,
@@ -141,13 +138,18 @@ export const MapGl: Component<{
     compass = new CompassRose(camera);
     compass.addGui(guiRose);
 
+    const groundMap = new GroundMap(scene, {
+      dispMapUrl: MAP.elevationMapUrl.href
+    })
+    groundMap.asyncInit()
+
     /**
      *  Layers
      */
     const world = new LayerContainer({
       geoLayers: GEOLAYERS,
       projector:geoJsonProjector,
-      elevationMap: await new ElevationMap(MAP.elevationMapUrl, {
+      elevationMap: new ElevationMap(MAP.elevationMapUrl, {
         displacementScale: 2,
         bounds: MAP.bounds
       })

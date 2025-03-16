@@ -1,6 +1,6 @@
 import * as GeoTIFF from 'geotiff';
-import { Sampler } from "../utils";
-import { Bounds } from '../GeoProjector';
+import { Sampler } from "./utils";
+import { Bounds } from './GeoProjector';
 import proj4 from 'proj4';
 
 const sampler = new Sampler('ElevationMap')
@@ -21,7 +21,7 @@ export class ElevationMap {
         maxLng: number
         width: number
         height: number
-        raster: GeoTIFF.ReadRasterResult
+        rasters: GeoTIFF.ReadRasterResult
     }
     mapProjection!: string
 
@@ -41,7 +41,7 @@ export class ElevationMap {
         const [minLat, minLng, maxLat, maxLng] = image.getBoundingBox(false);
         const width = image.getWidth();
         const height = image.getHeight();
-        const raster = await image.readRasters({ samples: [0] });
+        const rasters = await image.readRasters({ samples: [0] });
         this.tiff = {
             minLat,
             maxLat,
@@ -49,7 +49,7 @@ export class ElevationMap {
             maxLng,
             width,
             height,
-            raster
+            rasters
         }
         console.log('tiff', this.tiff, geoKeys)
         return this
@@ -70,7 +70,7 @@ export class ElevationMap {
         const y = Math.floor(((lat - minLat ) / (maxLat - minLat)) * height);
 
         //@ts-expect-error
-        const elevationValue = this.tiff.raster[0][y * width + x];
+        const elevationValue = this.tiff.rasters[0][y * width + x];
 
         sampler.log(() => {
             sampler.count++
@@ -81,6 +81,6 @@ export class ElevationMap {
         return Math.max(elevationValue, 0)
 
         // Scale elevation based on displacementScale
-        return (elevationValue / 255.0) * this.displacementScale;
+        return Math.max(elevationValue / 255.0 * this.displacementScale, 0);
     }
 }

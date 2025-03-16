@@ -11,7 +11,8 @@ export const stringToBool = (val: any) => {
 }
 
 export const flags = Object.freeze({
-    debug: stringToBool(new URLSearchParams(document.location.search).get("debug"))
+    debug: stringToBool(new URLSearchParams(document.location.search).get("debug")),
+    elevation: stringToBool(new URLSearchParams(document.location.search).get("elevation"))
 })
 
 console.log({ flags })

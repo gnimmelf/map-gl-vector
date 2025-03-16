@@ -1,6 +1,6 @@
 import proj4 from 'proj4'
 
-export const SOURCE_DIR = 'hurdal/gml/'
+export const SOURCE_DIR = '__hurdal/gml/'
 export const DEST_DIR = 'assets/geojson/'
 export const DEST_FILE_PREFIX = 'hurdal'
 

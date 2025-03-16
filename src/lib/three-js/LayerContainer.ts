@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import { GeoJsonLayer } from "./GeoJsonLayer";
-import { ElevationMap } from "./ElevationMap";
+import { ElevationMap } from "../ElevationMap";
 import { GeoProjector } from "../GeoProjector";
 
 type LayerContainerOptions = {
@@ -26,7 +26,6 @@ export class LayerContainer {
     async asyncInit() {
         if (this.options.elevationMap) {
             await this.options.elevationMap.asyncInit()
-            window.elevationMap = this.options.elevationMap
         }
 
         const containerGroup = new THREE.Group();
