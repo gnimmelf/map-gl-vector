@@ -1,0 +1,60 @@
+{
+  "name": "map-gl",
+  "private": true,
+  "version": "1.0.1",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "gml2geojson": "bun run --watch ./scripts/gml2geojson.bun.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.11",
+    "@types/proj4": "^2.5.5",
+    "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "babel-preset-solid": "^1.8.22",
+    "fast-xml-parser": "^4.5.0",
+    "jsonpath-plus": "^10.0.0",
+    "proj4": "^2.12.1",
+    "solid-devtools": "^0.30.1",
+    "solid-element": "^1.8.1",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.3",
+    "vite-plugin-solid": "^2.10.2"
+  },
+  "dependencies": {
+    "@deck.gl/core": "^9.0.33",
+    "@deck.gl/extensions": "^9.0.33",
+    "@deck.gl/geo-layers": "^9.0.33",
+    "@deck.gl/layers": "^9.0.33",
+    "@deck.gl/mesh-layers": "^9.0.33",
+    "@loaders.gl/core": "^4.2.5",
+    "@loaders.gl/geotiff": "^4.3.0",
+    "@loaders.gl/images": "^4.3.0",
+    "@loaders.gl/json": "^4.2.5",
+    "@loaders.gl/loader-utils": "^4.3.0",
+    "@loaders.gl/ply": "^4.2.5",
+    "@loaders.gl/schema": "^4.3.1",
+    "@loaders.gl/terrain": "^4.3.0",
+    "@solid-primitives/i18n": "^2.1.1",
+    "@types/three": "^0.168.0",
+    "earcut": "^3.0.0",
+    "geo-three": "^0.1.14",
+    "geotiff": "^2.1.3",
+    "lil-gui": "^0.19.2",
+    "solid-js": "^1.8.22",
+    "three": "^0.168.0"
+  },
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/surrolid.umd.cjs",
+  "module": "./dist/surrolid.js",
+  "exports": {
+    ".": {
+      "import": "./dist/surrolid.js",
+      "require": "./dist/surrolid.umd.cjs"
+    }
+  }
+}
