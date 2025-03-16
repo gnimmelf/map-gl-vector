@@ -209,7 +209,7 @@ export const DeckGl: Component = () => {
   }
 
   function onMousemove(evt: MouseEvent) {
-    // TODO! Expensiver on every mousemove
+    // TODO! Expensive on every mousemove
     const rect = canvasRef.getBoundingClientRect();
     // Normalize mouse position to [-1, 1]
     const mouseX = ((evt.clientX - rect.left) / (rect.right - rect.left)) * 2 - 1;

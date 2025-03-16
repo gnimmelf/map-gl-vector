@@ -58,12 +58,10 @@ export class Sampler {
     constructor(label: string) {
         this.count = 0
         this.label = label
+        this.log.bind(this)
     }
 
-    log(filter: (arg0: number) => boolean, ...args: any) {
-        if (filter(this.count)) {
-            console.log(this.label, ...args)
-        }
-        this.count++
+    log(logger: () => void) {
+        logger()
     }
 }

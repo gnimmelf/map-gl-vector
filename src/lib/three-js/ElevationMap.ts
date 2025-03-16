@@ -15,10 +15,10 @@ export class ElevationMap {
     displacementScale: number
     bounds: Bounds
     tiff!: {
-        minX: number
-        minY: number
-        maxX: number
-        maxY: number
+        minLat: number
+        maxLat: number
+        minLng: number
+        maxLng: number
         width: number
         height: number
         raster: GeoTIFF.ReadRasterResult
@@ -38,19 +38,20 @@ export class ElevationMap {
         const geoKeys = image.getGeoKeys()
         this.mapProjection = `EPSG:${geoKeys.GeographicTypeGeoKey}`
         // Extract image data
-        const [minX, minY, maxX, maxY] = image.getBoundingBox();
+        const [minLat, minLng, maxLat, maxLng] = image.getBoundingBox(false);
         const width = image.getWidth();
         const height = image.getHeight();
         const raster = await image.readRasters({ samples: [0] });
         this.tiff = {
-            minX,
-            minY,
-            maxX,
-            maxY,
+            minLat,
+            maxLat,
+            minLng,
+            maxLng,
             width,
             height,
             raster
         }
+        console.log('tiff', this.tiff, geoKeys)
         return this
     }
 
@@ -60,24 +61,24 @@ export class ElevationMap {
             ? proj4(this.mapProjection, toProjection, latLng)
             : latLng;
 
-        const { minX, minY, maxX, maxY, width, height, raster } = this.tiff;
+        const { width, height } = this.tiff;
+        const { minLat, maxLat, minLng, maxLng } = this.bounds;
 
-        const x = Math.floor(((lng - minX) / (maxX - minX)) * width);
-        const y = Math.floor(((lat - minY) / (maxY - minY)) * height);
+        // Normalization
+        const x = Math.floor(((lng - minLng) / (maxLng - minLng)) * width);
+        // const y = Math.floor(((maxLat - lat) / (maxLat - minLat)) * height); // Inverted Y-axis
+        const y = Math.floor(((lat - minLat ) / (maxLat - minLat)) * height);
 
-        // Extract the elevation data at the calculated pixel location
-        const elevationValue = raster[0][y * width + x];
+        //@ts-expect-error
+        const elevationValue = this.tiff.raster[0][y * width + x];
 
-        sampler.log((count) => {
-            return count % 100 == 0
-        }, {
-            latLng,
-            coord: [x, y],
-            elevationValue,
-            minX, minY, maxX, maxY, width, height, raster
+        sampler.log(() => {
+            sampler.count++
+            if (!(elevationValue != -9999 && sampler.count < 20)) return
+            console.log(sampler.label, y * width + x, elevationValue, { lat, lng }, { minLat, maxLat, minLng, maxLng, width, height })
         })
 
-        return elevationValue || 0
+        return Math.max(elevationValue, 0)
 
         // Scale elevation based on displacementScale
         return (elevationValue / 255.0) * this.displacementScale;

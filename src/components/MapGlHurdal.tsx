@@ -150,7 +150,7 @@ export const MapGl: Component<{
       elevationMap: await new ElevationMap(MAP.elevationMapUrl, {
         displacementScale: 2,
         bounds: MAP.bounds
-      }).asyncInit()
+      })
     })
     await world.asyncInit()
     world.addTo(scene);

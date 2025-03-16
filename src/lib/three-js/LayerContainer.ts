@@ -26,6 +26,7 @@ export class LayerContainer {
     async asyncInit() {
         if (this.options.elevationMap) {
             await this.options.elevationMap.asyncInit()
+            window.elevationMap = this.options.elevationMap
         }
 
         const containerGroup = new THREE.Group();
