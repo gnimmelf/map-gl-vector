@@ -62,7 +62,7 @@ export class Sampler {
         this.log.bind(this)
     }
 
-    log(logger: () => void) {
-        logger()
+    log(logger: (sampler: Sampler) => void) {
+        logger(this)
     }
 }

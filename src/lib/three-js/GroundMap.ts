@@ -81,11 +81,11 @@ export class GroundMap {
         const pixelY = Math.floor(j * (height - 1) / heightSegments);
 
         // Compute the index in the 1D elevation array.
-        const rasterIdx = pixelY * width + pixelX;
+        const rasterIdx = (pixelY * width) + pixelX;
 
         // Update the vertex's Z value using the elevation data.
         // Adjust the division (displacementScale) as needed for your scene.
-        vertices[vertexIndex * 3 + 2] = Math.max(rasters[0][rasterIdx], 1) / guiProps.displacementScale;
+        vertices[vertexIndex * 3 + 2] = Math.round(Math.max(rasters[0][rasterIdx], 1) / guiProps.displacementScale);
       }
     }
 
@@ -101,6 +101,5 @@ export class GroundMap {
     terrain.rotation.x = -Math.PI / 2; // Rotate to align with ground
 
     this.scene.add(terrain);
-
   }
 }

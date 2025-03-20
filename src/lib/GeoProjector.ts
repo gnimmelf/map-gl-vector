@@ -53,18 +53,20 @@ export class GeoProjector {
         this.lngRange = this.bounds.maxLng - this.bounds.minLng
 
         if (!this.options.mapHeight) {
-            this.options.mapHeight = (this.options.mapWidth! * this.latRange) / this.lngRange;
+            this.options.mapHeight = (this.options.mapWidth! * this.latRange / this.lngRange);
         }
+
+        console.log(this)
 
         // Bind method contexts
         this.normalize = this.normalize.bind(this)
     }
 
-    normalize(latLng: [number, number]): [number, number] {
-        const [lat, lng] = proj4(this.options.fromProjection!, this.options.toProjection!, latLng)
+    normalize(lngLat: [number, number]): [number, number] {
+        const [lng, lat] = proj4(this.options.fromProjection!, this.options.toProjection!, lngLat)
         // Normalization
-        const x = ((lng - this.bounds.minLng) / this.lngRange) * this.options.mapWidth!
-        const y = ((lat - this.bounds.minLat) / this.latRange) * this.options.mapHeight!
+        const x = ((lng - this.bounds.minLng) / this.lngRange) * (this.options.mapWidth! - 1);
+        const y = ((lat - this.bounds.maxLat) / this.latRange) * (this.options.mapHeight! - 1);
         return [x, y]
     }
 }

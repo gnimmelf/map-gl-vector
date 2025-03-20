@@ -61,7 +61,7 @@ Mapdata sets. Add to downloads, and proceed to "checkout". Select:
 
     - `Format`: "GML"
 
-- Høydedata [DTM10UTM32](https://kartkatalog.geonorge.no/metadata/dtm-10-terrengmodell-utm32/fd851873-f363-46f9-9fc6-bb1b403575df)
+- DEM (Digital Elevation Model) - "Digital TerrengModell 10": [DTM10UTM32](https://kartkatalog.geonorge.no/metadata/dtm-10-terrengmodell-utm32/fd851873-f363-46f9-9fc6-bb1b403575df)
 
 
 # scripts/gml2geojson

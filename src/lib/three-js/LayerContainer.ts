@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { GeoJsonLayer } from "./GeoJsonLayer";
 import { ElevationMap } from "../ElevationMap";
 import { GeoProjector } from "../GeoProjector";
+import { flags } from "../utils";
 
 type LayerContainerOptions = {
     geoLayers: GeoJsonLayer[];
@@ -28,6 +29,11 @@ export class LayerContainer {
             await this.options.elevationMap.asyncInit()
         }
 
+        if (flags.debug) {
+            //@ts-expect-error
+            window.elevationMap = this.options.elevationMap
+        }
+
         const containerGroup = new THREE.Group();
         const layers = this.options.geoLayers;
         // Load geoLayers
@@ -48,8 +54,8 @@ export class LayerContainer {
         });
 
         // Postition conatiner group
-        containerGroup.rotation.x = Math.PI / 2;
-        containerGroup.rotation.z = -Math.PI / 2;
+        containerGroup.rotation.x = -Math.PI / 2;
+        // containerGroup.rotation.z = Math.PI / 2;
 
         this.group = containerGroup
         return this

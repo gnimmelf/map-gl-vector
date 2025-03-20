@@ -1,86 +1,110 @@
 import * as GeoTIFF from 'geotiff';
-import { Sampler } from "./utils";
+import { flags, Sampler } from "./utils";
 import { Bounds } from './GeoProjector';
 import proj4 from 'proj4';
 
 const sampler = new Sampler('ElevationMap')
 
+async function loadElevationData(url: string) {
+    // Load TIFF file
+    const tiff = await GeoTIFF.fromUrl(url);
+    const image = await tiff.getImage();
+
+    // Extract image meta data
+    const geoKeys = image.getGeoKeys()
+    console.log({ geoKeys })
+    const projection = `EPSG:${geoKeys.GeographicTypeGeoKey}`
+    const [minLat, minLng, maxLat, maxLng] = image.getBoundingBox(false);
+    const bounds = { minLat, minLng, maxLat, maxLng };
+
+    // Read elevation data
+    const rasters = await image.readRasters({ samples: [0] });
+    const width = image.getWidth();
+    const height = image.getHeight();
+
+
+    return { rasters, width, height, projection, bounds };
+}
+
 export type ElevationOptions = {
     bounds: Bounds
-    displacementScale?: number
+    displacementScale: number
+    projection?: string
 }
 
 export class ElevationMap {
     url: URL
+    options: ElevationOptions
     displacementScale: number
-    bounds: Bounds
     tiff!: {
-        minLat: number
-        maxLat: number
-        minLng: number
-        maxLng: number
+        projection: string
+        bounds?: Bounds
         width: number
         height: number
         rasters: GeoTIFF.ReadRasterResult
     }
-    mapProjection!: string
+    projection!: string
+    bounds!: Bounds
+    latRange!: number
+    lngRange!: number
 
     constructor(url: URL, options: ElevationOptions) {
         this.url = url
-        this.displacementScale = options.displacementScale || 50
-        this.bounds = options.bounds
+        this.options = options
+        this.displacementScale = this.options.displacementScale
     }
 
     async asyncInit() {
-        const tiff = await GeoTIFF.fromUrl(this.url.href);
-        const image = await tiff.getImage();
-        // Extract image meta data
-        const geoKeys = image.getGeoKeys()
-        this.mapProjection = `EPSG:${geoKeys.GeographicTypeGeoKey}`
-        // Extract image data
-        const [minLat, minLng, maxLat, maxLng] = image.getBoundingBox(false);
-        const width = image.getWidth();
-        const height = image.getHeight();
-        const rasters = await image.readRasters({ samples: [0] });
-        this.tiff = {
-            minLat,
-            maxLat,
-            minLng,
-            maxLng,
-            width,
-            height,
-            rasters
-        }
-        console.log('tiff', this.tiff, geoKeys)
+        this.tiff = await loadElevationData(this.url.href);
+        this.projection = this.tiff.projection || this.options.projection || ''
+        this.bounds = this.tiff.bounds || this.options.bounds
+
+        console.assert(this.projection, 'Missing projection')
+        console.assert(this.bounds, 'Missing bounds')
+
+        this.latRange = this.bounds.maxLat - this.bounds.minLat
+        this.lngRange = this.bounds.maxLng - this.bounds.minLng
+        // TODO! If `tiff.bounds`, assert that equal to `this.bounds`
+        console.log({
+            minLat: [this.bounds.minLat, this.tiff.bounds?.minLat],
+            minLng: [this.bounds.minLng, this.tiff.bounds?.minLng],
+            maxLat: [this.bounds.maxLat, this.tiff.bounds?.maxLat],
+            maxLng: [this.bounds.maxLng, this.tiff.bounds?.maxLng]
+        })
         return this
     }
 
-    getElevationAt(latLng: [number, number], toProjection: string): number {
+    getElevationAt(lngLat: [number, number], toProjection: string): number {
         // Project from latLng to the tiff's projection
-        const [lat, lng] = this.mapProjection !== toProjection
-            ? proj4(this.mapProjection, toProjection, latLng)
-            : latLng;
+        const [lng, lat] = this.projection !== toProjection
+            ? proj4(this.projection, toProjection, lngLat)
+            : lngLat;
 
-        const { width, height } = this.tiff;
-        const { minLat, maxLat, minLng, maxLng } = this.bounds;
+        const x = ((lng - this.bounds.minLng) / this.lngRange) * (this.tiff.width! - 1);
+        const y = ((lat - this.bounds.maxLat) / this.latRange) * (this.tiff.height! - 1);
 
-        // Normalization
-        const x = Math.floor(((lng - minLng) / (maxLng - minLng)) * width);
-        // const y = Math.floor(((maxLat - lat) / (maxLat - minLat)) * height); // Inverted Y-axis
-        const y = Math.floor(((lat - minLat ) / (maxLat - minLat)) * height);
+        const rasterIdx = (x * this.tiff.width) + y;
 
         //@ts-expect-error
-        const elevationValue = this.tiff.rasters[0][y * width + x];
+        const elevationValue = Math.max(Math.floor(this.tiff.rasters[0][rasterIdx]), 0);
 
-        sampler.log(() => {
-            sampler.count++
-            if (!(elevationValue != -9999 && sampler.count < 20)) return
-            console.log(sampler.label, y * width + x, elevationValue, { lat, lng }, { minLat, maxLat, minLng, maxLng, width, height })
+        sampler.log((inst) => {
+            if (inst.count > 20 && isNaN(elevationValue)) return
+            inst.count++
+            console.log(inst.label, {
+                elevationValue,
+                fromProjection: this.projection,
+                toProjection,
+                lngLat,
+                coords: [x, y],
+                lngLatTo: [lng, lat],
+                bounds: this.bounds,
+                lngRange: this.lngRange,
+                latRange: this.latRange,
+            })
         })
 
-        return Math.max(elevationValue, 0)
-
         // Scale elevation based on displacementScale
-        return Math.max(elevationValue / 255.0 * this.displacementScale, 0);
+        return Math.round(elevationValue || 0 / this.displacementScale);
     }
 }

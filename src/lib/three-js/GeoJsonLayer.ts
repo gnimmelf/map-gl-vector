@@ -99,7 +99,7 @@ export class GeoJsonLayer {
         const pointGeometry = new THREE.BufferGeometry();
         const pointMaterial = new THREE.PointsMaterial({ color: this.options.color, size: 10 });
 
-        // Convert lat/lon to 3D position
+        // Convert lat/lng to 3D position
         const pointPosition = new THREE.Vector3(vector3.x, vector3.y, vector3.z);
         pointGeometry.setFromPoints([pointPosition]);
 
@@ -157,12 +157,12 @@ export class GeoJsonLayer {
         return new THREE.Mesh(geometry, material);
     }
 
-    #latLngToVector3(latLng: [number, number], ) {
-        const layerCoord = this.projector!.normalize(latLng)
+    #latLngToVector3(lngLat: [number, number], ) {
+        const layerXY = this.projector!.normalize(lngLat)
         const elevation = this.elevationMap && flags.elevation
-            ? this.elevationMap.getElevationAt(latLng, this.projector!.options.fromProjection)
+            ? this.elevationMap.getElevationAt(lngLat, this.projector!.options.fromProjection)
             : 0;
-        return new THREE.Vector3(layerCoord[0], layerCoord[1], elevation);
+        return new THREE.Vector3(layerXY[0], layerXY[1], elevation);
     }
 
 }
