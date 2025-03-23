@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { MapControls } from "../lib/three-js/MapControls";
 import { CompassRose } from "../lib/three-js/CompassRose";
 import { MapMarkers } from "../lib/three-js/MapMarkers";
-import { GeoProjector } from "../lib/GeoProjector";
+import { Bounds, GeoProjector } from "../lib/GeoProjector";
 import { flags } from "../lib/utils";
 import { Version } from "./Version";
 import { LayerContainer } from "../lib/three-js/LayerContainer";
@@ -20,8 +20,6 @@ import { GroundMap } from "../lib/three-js/GroundMap";
  * Constants
  */
 const gui = new dat.GUI({ closeFolders: true });
-const guiTerrain = gui.addFolder("Terrain");
-const guiRose = gui.addFolder("Rose");
 
 const VIEW = {
   viewFractionX: 1,
@@ -34,55 +32,46 @@ const VIEW = {
   ambientLight: new THREE.AmbientLight(0xff00ff, Math.PI),
 } as const;
 
+const ASSETS_URL = "https://localhost:3030/assets/";
+
 const MAP = {
-  elevationMapUrl: new URL("https://localhost:3030/assets/output_final.tif"),
-  bounds: {
-    minLng: 10.660282896249676, // W-E
-    maxLng: 11.147154251739, // W-E
-    minLat: 60.31796830024959, // S-N
-    maxLat: 60.53671646656206, // S-N
-  },
+  geoJsonBaseUrl: `${ASSETS_URL}/geojson/`,
+  elevationMapUrl: new URL(`${ASSETS_URL}/output_final.tif`),
   width: 1000, // Map max-width-units within the THREEJS coordinatesystem
+  bounds: new Bounds("EPSG:4326", {
+    axisLabels: { x: "longitude", y: "latitude" },
+    x: { min: 10.660282896249676, max: 11.147154251739 },
+    y: { min: 60.31796830024959, max: 60.53671646656206 },
+  }),
 };
 
 const geoJsonProjector = new GeoProjector(MAP.bounds, {
-  fromProjection: "EPSG:4326",
-  toProjection: "EPSG:25832",
+  toCrs: "EPSG:25832",
   mapWidth: MAP.width,
 });
 
-const GEOJSON_BASE_URL = "https://localhost:3030/assets/geojson";
-const GEOLAYERS = [
+const geoLayers = [
   // new GeoJsonLayer(
-  //   new URL(`${GEOJSON_BASE_URL}/hurdal_kommuneomrade.geojson`),
+  //   new URL(`${MAP.geoJsonBaseUrl}/hurdal_kommuneomrade.geojson`),
   //   {
   //     id: "area",
   //     color: 0x1c6a38,
   //   }
   // ),
+  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_alpinbakke.geojson`), {
+    id: "alpineslopes",
+    color: 0xffffff,
+  }),
+  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_hoydekurve.geojson`), {
+    id: "heightlines",
+    color: 0x00ff00,
+  }),
+  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_vann.geojson`), {
+    id: "water",
+    color: 0x0000ff,
+  }),
   new GeoJsonLayer(
-    new URL("https://localhost:3030/assets/geojson/hurdal_alpinbakke.geojson"),
-    {
-      id: "alpineslopes",
-      color: 0xffffff,
-    }
-  ),
-  new GeoJsonLayer(
-    new URL("https://localhost:3030/assets/geojson/hurdal_hoydekurve.geojson"),
-    {
-      id: "heightlines",
-      color: 0x00ff00,
-    }
-  ),
-  // new GeoJsonLayer(
-  //   new URL("https://localhost:3030/assets/geojson/hurdal_vann.geojson"),
-  //   {
-  //     id: "water",
-  //     color: 0x0000ff,
-  //   }
-  // ),
-  new GeoJsonLayer(
-    new URL(`${GEOJSON_BASE_URL}/hurdal_kommunegrense.geojson`),
+    new URL(`${MAP.geoJsonBaseUrl}/hurdal_kommunegrense.geojson`),
     {
       id: "border",
       color: 0xff0000,
@@ -130,34 +119,33 @@ export const MapGl: Component<{
     if (flags.debug) {
       const axesHelper = new THREE.AxesHelper(1e12);
       scene.add(axesHelper);
+
+      const groundMap = new GroundMap(scene, {
+        dispMapUrl: MAP.elevationMapUrl.href,
+        projector: geoJsonProjector,
+      });
+      groundMap.asyncInit();
     }
 
     /**
      * Compass rose
      */
     compass = new CompassRose(camera);
-    compass.addGui(guiRose);
-
-    const groundMap = new GroundMap(scene, {
-      dispMapUrl: MAP.elevationMapUrl.href
-    })
-    groundMap.asyncInit()
+    await compass.asyncInit();
 
     /**
      *  Layers
      */
     const world = new LayerContainer({
-      geoLayers: GEOLAYERS,
-      projector:geoJsonProjector,
+      geoLayers: geoLayers,
+      projector: geoJsonProjector,
       elevationMap: new ElevationMap(MAP.elevationMapUrl, {
         displacementScale: 15,
-        bounds: MAP.bounds
-      })
-    })
-    await world.asyncInit()
+      }),
+    });
+    await world.asyncInit();
     world.addTo(scene);
   }
-
 
   /**
    * Eventhandlers
@@ -189,11 +177,14 @@ export const MapGl: Component<{
     await createScene();
     renderer.setAnimationLoop(animationLoop);
     addEventListener("resize", onResize, false);
-    addEventListener('dblclick', (evt: MouseEvent) => {
-      evt.stopPropagation()
-      evt.preventDefault()
-
-    }, false);
+    addEventListener(
+      "dblclick",
+      (evt: MouseEvent) => {
+        evt.stopPropagation();
+        evt.preventDefault();
+      },
+      false
+    );
     onResize();
   });
 

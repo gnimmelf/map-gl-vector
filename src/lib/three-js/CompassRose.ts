@@ -1,11 +1,6 @@
 import * as THREE from 'three'
-import * as dat from 'lil-gui'
 import { loadSvg3d } from '../svg';
 import urlRose from '/assets/compass-rose.svg'
-
-export const guiProps = {
-  rotationX: -Math.PI / 6,
-}
 
 /**
  * Compass and Rose
@@ -26,7 +21,9 @@ export class CompassRose {
     this.worldDirection = new THREE.Vector3();
     this.directionMask = new THREE.Vector3(0, 0, 1);
     this.bearing = 0
+  }
 
+  async asyncInit() {
     loadSvg3d(urlRose, {
       extrusion: 2,
       reCenter: new THREE.Vector3(0, 10, 0),
@@ -37,10 +34,10 @@ export class CompassRose {
       this.rose = rose
       rose.name = 'rose'
       this.compass.add(rose);
-      this.compass.rotation.x = guiProps.rotationX
+      this.compass.rotation.x = -Math.PI / 6
       this.onResize()
       // TODO! Try adding `OrthographicCamera` as a wrapper around `compass`
-      camera.add(this.compass);
+      this.camera.add(this.compass);
     })
   }
 
@@ -64,13 +61,5 @@ export class CompassRose {
     this.spherical.setFromVector3(this.worldDirection);
     this.bearing = Math.PI - this.spherical.theta
     this.rose?.setRotationFromAxisAngle(this.directionMask, this.bearing)
-  }
-
-  addGui(folder: dat.GUI) {
-    folder.add(guiProps, 'rotationX', -Math.PI, Math.PI).onChange((e: number) => {
-      const rose = this.compass.getObjectByName('rose')
-      //@ts-ignore
-      rose.rotation.x = e
-    })
   }
 }

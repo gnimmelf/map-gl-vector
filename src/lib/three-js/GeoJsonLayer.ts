@@ -2,7 +2,7 @@ import * as THREE from 'three'
 //@ts-expect-error
 import earcut from 'earcut';
 
-import { dir, flags, waitForProperty } from '../utils'
+import { flags } from '../utils'
 import { GeoProjector } from '../GeoProjector';
 import { ElevationMap } from '../ElevationMap';
 
@@ -37,7 +37,7 @@ export class GeoJsonLayer {
     url: URL
     group!: THREE.Group
     options: GeoJsonLayerOptions
-    projector?: GeoProjector
+    projector!: GeoProjector
     elevationMap?: ElevationMap
 
     constructor(url: URL, options: GeoJsonLayerOptions) {
@@ -157,12 +157,19 @@ export class GeoJsonLayer {
         return new THREE.Mesh(geometry, material);
     }
 
-    #latLngToVector3(lngLat: [number, number], ) {
-        const layerXY = this.projector!.normalize(lngLat)
-        const elevation = this.elevationMap && flags.elevation
-            ? this.elevationMap.getElevationAt(lngLat, this.projector!.options.fromProjection)
-            : 0;
-        return new THREE.Vector3(layerXY[0], layerXY[1], elevation);
+    #latLngToVector3(lonLat: [number, number], ) {
+        const coordinate = this.projector!.forwardToLocal(lonLat) as [number, number]
+
+        let elevation = 0
+
+        if (this.elevationMap && flags.elevation) {
+            elevation = this.elevationMap.getElevationAt(coordinate, {
+                width: this.projector.mapWidth,
+                height: this.projector.mapHeight,
+            })
+        }
+
+        return new THREE.Vector3(coordinate[0], coordinate[1], elevation);
     }
 
 }

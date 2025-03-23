@@ -1,10 +1,6 @@
 import * as THREE from 'three'
-import { flags, Sampler } from '../utils'
 import * as GeoTIFF from 'geotiff';
 import { GeoProjector } from '../GeoProjector';
-import proj4 from 'proj4';
-
-const sampler = new Sampler('ElevationMap')
 
 async function loadElevationData(url: string) {
   // Load TIFF file
@@ -34,12 +30,6 @@ type Options = {
   projector: GeoProjector
 }
 
-export const guiProps = {
-  mapColor: '#ffffff',
-  wireframe: flags.debug,
-  displacementScale: 10,
-}
-
 /**
  * Ground Map Plane
  *
@@ -61,6 +51,9 @@ export class GroundMap {
   material!: THREE.MeshStandardMaterial
   mesh!: THREE.Mesh
 
+  mapColor = '#ffffff'
+  displacementScale = 10
+
   constructor(scene: THREE.Scene, options: Options) {
     this.scene = scene
     this.options = options
@@ -78,9 +71,6 @@ export class GroundMap {
       lenX: toBounds.xRange / widthSegments,
       lenY: toBounds.yRange / heightSegments
     }
-
-    // Inverse projector "EPSG:25832" => "EPSG:4326"
-    const invProj = proj4(this.options.projector.toBounds.crsName, this.options.projector.fromBounds.crsName);
 
     /**
      * DEM
@@ -102,15 +92,9 @@ export class GroundMap {
     // Loop over each vertex using a 2D grid index
     for (let gridY = 0; gridY < gridSize.y; gridY++) {
       for (let gridX = 0; gridX < gridSize.x; gridX++) {
-        // Segment vertices xy => geoPlane xy
-        const planeX = Math.round(gridX * (planeWidth - 1) / widthSegments);
-        const planeY = Math.round(gridY * (planeHeight - 1) / heightSegments);
-        // GeoPlane => to EPSG:25832
-        const easting = toBounds.x.min + gridX * planeSeg.lenX
-        const northing = toBounds.y.min + gridY * planeSeg.lenY
-        // EPSG:25832 => EPSG:4326
-        const [lon, lat] = invProj.forward([easting, northing]);
-        // ESPGS:4329 => DEM indices
+        /**
+         * Get DEM.raster coords from
+         */
         const rasterX = Math.floor(gridX * (DEM.width - 1) / widthSegments);
         const rasterY = Math.floor(gridY * (DEM.height - 1) / heightSegments);
 
@@ -123,7 +107,7 @@ export class GroundMap {
         /**
          * Modulate the rasterVal (Meters above sealevel)
          */
-        const rasterVal = Math.max(DEM.raster[rasterIdx], 1) / guiProps.displacementScale
+        const rasterVal = Math.max(DEM.raster[rasterIdx], 1) / this.displacementScale
 
         /**
          * Each vertex has three components (x, y, z)
@@ -140,7 +124,7 @@ export class GroundMap {
     plane.computeVertexNormals();
 
     // Create a material
-    const material = new THREE.MeshStandardMaterial({ color: guiProps.mapColor, wireframe: guiProps.wireframe });
+    const material = new THREE.MeshStandardMaterial({ color: this.mapColor, wireframe: true });
 
     // Create mesh
     const terrain = new THREE.Mesh(plane, material);
