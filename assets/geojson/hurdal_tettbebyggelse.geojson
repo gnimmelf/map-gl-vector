@@ -1,6 +1,12 @@
 {
     "type": "FeatureCollection",
     "name": "app:Tettbebyggelse",
+    "bbox": [
+        10.66698710844047,
+        60.33636918184986,
+        11.147280359235149,
+        60.51791684203125
+    ],
     "crs": {
         "type": "name",
         "properties": {

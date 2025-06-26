@@ -52,18 +52,3 @@ export async function waitForProperty(obj: Object, property: string) {
         }, 100); // Check every 100ms
     });
 }
-
-export class Sampler {
-    count: number
-    label: string
-
-    constructor(label: string) {
-        this.count = 0
-        this.label = label
-        this.log.bind(this)
-    }
-
-    log(logger: (sampler: Sampler) => void) {
-        logger(this)
-    }
-}

@@ -1,6 +1,12 @@
 {
     "type": "FeatureCollection",
     "name": "app:Bygning",
+    "bbox": [
+        10.6996404744827,
+        60.343673482529155,
+        11.144999877916396,
+        60.51304873146145
+    ],
     "crs": {
         "type": "name",
         "properties": {

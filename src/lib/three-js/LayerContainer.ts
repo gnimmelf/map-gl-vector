@@ -2,12 +2,12 @@ import * as THREE from "three";
 
 import { GeoJsonLayer } from "./GeoJsonLayer";
 import { ElevationMap } from "../ElevationMap";
-import { GeoProjector } from "../GeoProjector";
 import { flags } from "../utils";
 
 type LayerContainerOptions = {
     geoLayers: GeoJsonLayer[];
-    projector?: GeoProjector
+    crsName: string
+    mapWidth: number
     elevationMap?: ElevationMap
 };
 
@@ -16,12 +16,7 @@ export class LayerContainer {
     group!: THREE.Group;
 
     constructor(options: LayerContainerOptions) {
-        this.options = Object.assign(
-            {
-                // Default options
-            },
-            options
-        );
+        this.options = options
     }
 
     async asyncInit() {
@@ -38,10 +33,11 @@ export class LayerContainer {
         const layers = this.options.geoLayers;
         // Load geoLayers
         await Promise.all(layers.map((layer) => {
-            layer.projector = this.options.projector
-            layer.elevationMap = this.options.elevationMap
-            console.log(layer.options.id, layer.projector)
-            return layer.asyncInit()
+            return layer.asyncInit({
+              crsName: this.options.crsName,
+              elevationMap: this.options.elevationMap,
+              mapWidth: this.options.mapWidth
+            })
         }));
         layers.forEach(async (layer, idx) => {
             const layerGroup = layer.group;
@@ -70,7 +66,7 @@ export class LayerContainer {
         const boundingBox = new THREE.Box3().setFromObject(group);
         const center = new THREE.Vector3();
         boundingBox.getCenter(center);
-        group.position.set(-center.x, -center.y, -center.z);
+        group.position.set(-center.x, 0, -center.z);
         return this;
     }
 }

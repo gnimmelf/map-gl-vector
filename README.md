@@ -61,16 +61,13 @@ Mapdata sets. Add to downloads, and proceed to "checkout". Select:
 
     - `Format`: "GML"
 
-- DEM (Digital Elevation Model) - "Digital TerrengModell 10": [DTM10UTM32](https://kartkatalog.geonorge.no/metadata/dtm-10-terrengmodell-utm32/fd851873-f363-46f9-9fc6-bb1b403575df)
+    - See `scripts/geojson_howto.md` for extracting geojson files from gml-files.
 
-See `scripts/DTM10_howto.md` for merging and cropping the geotiff
+- DEM (Digital Elevation Model)
 
-# scripts/gml2geojson
+    - "Digital TerrengModell 10" [DTM10UTM32](https://kartkatalog.geonorge.no/metadata/dtm-10-terrengmodell-utm32/fd851873-f363-46f9-9fc6-bb1b403575df)
 
-Extract zip to a folder and copy and / or modify `scripts/gml2geojson.config.ts` to suit your needs, then run:
+    - See `scripts/DTM10_howto.md` for merging and cropping the geotiff
 
-```
-bun run scripts/gml2geojson2.bun.ts
-```
 
-Test the resluting geojson-files in QGIS to see if they fit your needs.
+

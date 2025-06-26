@@ -7,7 +7,6 @@ import * as THREE from "three";
 import { MapControls } from "../lib/three-js/MapControls";
 import { CompassRose } from "../lib/three-js/CompassRose";
 import { MapMarkers } from "../lib/three-js/MapMarkers";
-import { Bounds, GeoProjector } from "../lib/GeoProjector";
 import { flags } from "../lib/utils";
 import { Version } from "./Version";
 import { LayerContainer } from "../lib/three-js/LayerContainer";
@@ -29,7 +28,7 @@ const VIEW = {
   far: 1e12,
   cameraDistance: 1000,
   cameraPos: new THREE.Vector3(0, 750, 300),
-  ambientLight: new THREE.AmbientLight(0xff00ff, Math.PI),
+  ambientLight: new THREE.AmbientLight(0xffffff, 2),
 } as const;
 
 const ASSETS_URL = "https://localhost:3030/assets/";
@@ -38,43 +37,37 @@ const MAP = {
   geoJsonBaseUrl: `${ASSETS_URL}/geojson/`,
   elevationMapUrl: new URL(`${ASSETS_URL}/output_final.tif`),
   width: 1000, // Map max-width-units within the THREEJS coordinatesystem
-  bounds: new Bounds("EPSG:4326", {
-    axisLabels: { x: "longitude", y: "latitude" },
-    x: { min: 10.660282896249676, max: 11.147154251739 },
-    y: { min: 60.31796830024959, max: 60.53671646656206 },
-  }),
+  widthSegments: 200,
+  crsName: "EPSG:25832",
 };
-
-const geoJsonProjector = new GeoProjector(MAP.bounds, {
-  toCrs: "EPSG:25832",
-  mapWidth: MAP.width,
-});
 
 const geoLayers = [
   // new GeoJsonLayer(
   //   new URL(`${MAP.geoJsonBaseUrl}/hurdal_kommuneomrade.geojson`),
   //   {
   //     id: "area",
-  //     color: 0x1c6a38,
+  //     color: 0x000000,
+  //     useElevation: false,
   //   }
   // ),
-  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_alpinbakke.geojson`), {
-    id: "alpineslopes",
-    color: 0xffffff,
-  }),
-  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_hoydekurve.geojson`), {
-    id: "heightlines",
-    color: 0x00ff00,
-  }),
-  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_vann.geojson`), {
-    id: "water",
-    color: 0x0000ff,
-  }),
+  // new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_alpinbakke.geojson`), {
+  //   id: "alpineslopes",
+  //   color: 0xffffff,
+  // }),
+  // new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_hoydekurve.geojson`), {
+  //   id: "heightlines",
+  //   color: 0x00ff00,
+  // }),
+  // new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_vann.geojson`), {
+  //   id: "water",
+  //   color: 0x0000ff,
+  // }),
   new GeoJsonLayer(
     new URL(`${MAP.geoJsonBaseUrl}/hurdal_kommunegrense.geojson`),
     {
       id: "border",
       color: 0xff0000,
+      useElevation: false,
     }
   ),
 ];
@@ -122,7 +115,10 @@ export const MapGl: Component<{
 
       const groundMap = new GroundMap(scene, {
         dispMapUrl: MAP.elevationMapUrl.href,
-        projector: geoJsonProjector,
+        crsName: MAP.crsName,
+        mapWidth: MAP.width,
+        widthSegments: MAP.widthSegments,
+        mapColor: 0x004433,
       });
       groundMap.asyncInit();
     }
@@ -138,7 +134,8 @@ export const MapGl: Component<{
      */
     const world = new LayerContainer({
       geoLayers: geoLayers,
-      projector: geoJsonProjector,
+      crsName: MAP.crsName,
+      mapWidth: MAP.width,
       elevationMap: new ElevationMap(MAP.elevationMapUrl, {
         displacementScale: 15,
       }),
@@ -185,7 +182,7 @@ export const MapGl: Component<{
       },
       false
     );
-    onResize();
+    // setTimeout(() => onResize(), 1000);
   });
 
   return (

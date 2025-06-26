@@ -1,33 +1,14 @@
 import * as THREE from 'three'
-import * as GeoTIFF from 'geotiff';
-import { GeoProjector } from '../GeoProjector';
-
-async function loadElevationData(url: string) {
-  // Load TIFF file
-  const tiff = await GeoTIFF.fromUrl(url);
-  const image = await tiff.getImage();
-
-  // Read elevation data
-  const rasters = await image.readRasters({ samples: [0] });
-  const width = image.getWidth();
-  const height = image.getHeight();
-
-  const [minLon, minLat, maxLon, maxLat] = image.getBoundingBox();
-  const lonRange = (maxLon - minLon);
-  const latRange = (maxLat - minLat);
-
-  return {
-    raster: rasters[0] as GeoTIFF.TypedArray, // Assuming a single-band DEM
-    width,
-    height,
-    lonRange,
-    latRange
-  };
-}
+import { loadElevationData } from '../geo-utils'
+import { GeoBounds } from '../GeoBounds'
 
 type Options = {
   dispMapUrl: string
-  projector: GeoProjector
+  crsName: string
+  mapWidth?: number
+  widthSegments?: number
+  mapColor?: THREE.ColorRepresentation
+  displacementScale?: number
 }
 
 /**
@@ -39,9 +20,9 @@ type Options = {
  */
 export class GroundMap {
   scene: THREE.Scene
-  options: Options
+  options: Required<Options>
 
-  planeWidth = 1000
+  mapWidth = 1000
   widthSegments = 100 // Increase to match diplacement better with texture
 
   canvas = document.createElement('canvas');
@@ -51,21 +32,27 @@ export class GroundMap {
   material!: THREE.MeshStandardMaterial
   mesh!: THREE.Mesh
 
-  mapColor = '#ffffff'
-  displacementScale = 10
-
   constructor(scene: THREE.Scene, options: Options) {
     this.scene = scene
-    this.options = options
+    this.options = this.options = Object.assign({
+      mapColor: 0xff0000,
+      displacementScale: 10,
+      mapWidth: 1000,
+      widthSegments: 100
+    }, options || {})
   }
 
   async asyncInit() {
-    const { toBounds, fromBounds } = this.options.projector
-    const { planeWidth, widthSegments } = this
-    const planeHeight = Math.round(planeWidth / toBounds.mapRatio)
-    const heightSegments = Math.round(widthSegments / toBounds.mapRatio)
+    const DEM = await loadElevationData(this.options.dispMapUrl);
+    const toBounds = GeoBounds.fromBounds(DEM.bounds, {
+      toCrsName: this.options.crsName,
+      axisLabels: {x: 'longitude', y: 'latitude'}
+    })
+    const { mapWidth, widthSegments } = this.options
+    const mapHeight = Math.floor(mapWidth / toBounds.ratio)
+    const heightSegments = Math.floor(widthSegments / toBounds.ratio)
     // Create THREE.js PlaneGeometry with the converted dimensions
-    const plane = new THREE.PlaneGeometry(planeWidth, planeHeight, widthSegments, heightSegments);
+    const plane = new THREE.PlaneGeometry(mapWidth, mapHeight, widthSegments, heightSegments);
     // Calc plane segments lengths
     const planeSeg = {
       lenX: toBounds.xRange / widthSegments,
@@ -75,11 +62,11 @@ export class GroundMap {
     /**
      * DEM
      * */
-    const DEM = await loadElevationData(this.options.dispMapUrl);
+
     // Calc DEM segments lengths
     const demSeg = {
-      lenX: DEM.lonRange / widthSegments,
-      lenY: DEM.latRange / heightSegments
+      lenX: DEM.bounds.xRange / widthSegments,
+      lenY: DEM.bounds.yRange / heightSegments
     }
 
     /**
@@ -107,15 +94,15 @@ export class GroundMap {
         /**
          * Modulate the rasterVal (Meters above sealevel)
          */
-        const rasterVal = Math.max(DEM.raster[rasterIdx], 1) / this.displacementScale
+        const rasterVal = Math.max(DEM.raster[rasterIdx], 1) / this.options.displacementScale
 
         /**
          * Each vertex has three components (x, y, z)
          * - Multiply the vertex index by 3 gives the start index of the vertex in the array.
          * - Add 2 to the current start index to get index of the z-component
          */
-        const vertexIdx = ((gridY * gridSize.x + gridX) * 3)  + 2;
-        plane.attributes.position.array[vertexIdx] = Math.max(rasterVal, 1)
+        const vertexIdx = ((gridY * gridSize.x + gridX) * 3) + 2;
+        plane.attributes.position.array[vertexIdx] = - rasterVal
       }
     }
 
@@ -124,7 +111,7 @@ export class GroundMap {
     plane.computeVertexNormals();
 
     // Create a material
-    const material = new THREE.MeshStandardMaterial({ color: this.mapColor, wireframe: true });
+    const material = new THREE.MeshStandardMaterial({ color: this.options.mapColor, wireframe: true });
 
     // Create mesh
     const terrain = new THREE.Mesh(plane, material);

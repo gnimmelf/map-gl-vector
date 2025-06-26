@@ -14,8 +14,6 @@ import {
     Geometries
 } from './gml2geoJson.config.hurdal'
 
-const dir = (obj: any, depth = 0) => console.dir(obj, { depth })
-
 const GEOJSON_CRS_NAME = 'EPSG:4326' // aka "WGS 84"
 
 const getFilepath = (dir: string, filename: string) => {
@@ -195,9 +193,12 @@ class FeatureCollection {
     }
 
     toGeoJson() {
+        const [minLon, minLat] = this.properties.lowerCorner
+        const [maxLon, maxLat] = this.properties.upperCorner
         return {
             type: this.type,
             name: this.name,
+            bbox: [minLon, minLat, maxLon, maxLat],
             crs: {
                 type: "name",
                 properties: {
@@ -263,19 +264,19 @@ class Gml {
     async writeBoundsJson() {
         const maxBounds = this.featureCollections.reduce((acc, collection) => {
             // Very important to get this correct!
-            const [minLat, minLng] = collection.properties.lowerCorner
-            const [maxLat, maxLng] = collection.properties.upperCorner
+            const [minLon, minLat] = collection.properties.lowerCorner
+            const [maxLon, maxLat] = collection.properties.upperCorner
             return {
                 minLat: Math.min(acc.minLat, minLat),
-                minLng: Math.min(acc.minLng, minLng),
                 maxLat: Math.max(acc.maxLat, maxLat),
-                maxLng: Math.max(acc.maxLng, maxLng),
+                minLon: Math.min(acc.minLon, minLon),
+                maxLon: Math.max(acc.maxLon, maxLon),
             }
         }, {
             minLat: Number.MAX_SAFE_INTEGER,
-            minLng: Number.MAX_SAFE_INTEGER,
+            minLon: Number.MAX_SAFE_INTEGER,
             maxLat: 0,
-            maxLng: 0,
+            maxLon: 0,
         })
 
         const boundsFile =getFilepath(DEST_DIR, `${DEST_FILE_PREFIX}_bounds.json`)
@@ -296,8 +297,6 @@ const main = async () => {
     await Promise.all(filenames.map(async filename => await gml.addFeatureCollectionsFromFile(filename)))
 
     await gml.writeGeoJson()
-
-    await gml.writeBoundsJson()
 }
 
 main()

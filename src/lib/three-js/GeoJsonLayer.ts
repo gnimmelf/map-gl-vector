@@ -5,6 +5,7 @@ import earcut from 'earcut';
 import { flags } from '../utils'
 import { GeoProjector } from '../GeoProjector';
 import { ElevationMap } from '../ElevationMap';
+import { GeoBounds } from '../GeoBounds';
 
 type GeoJSON = {
     type: string;
@@ -24,10 +25,12 @@ type Geometry = {
 
 type GeoJsonLayerOptions = {
     id: string
-    projector?: GeoProjector
+    crsName?: string
     elevationMap?: ElevationMap
     color?: THREE.ColorRepresentation
     extrusion?: null | number
+    useElevation?: boolean
+    mapWidth?: number
 }
 
 /**
@@ -36,29 +39,37 @@ type GeoJsonLayerOptions = {
 export class GeoJsonLayer {
     url: URL
     group!: THREE.Group
-    options: GeoJsonLayerOptions
     projector!: GeoProjector
-    elevationMap?: ElevationMap
+    options: GeoJsonLayerOptions
 
     constructor(url: URL, options: GeoJsonLayerOptions) {
         this.url = url
         this.options = Object.assign({
             extrusion: null,
-            color: 0xff0000
+            color: 0xff0000,
+            useElevation: true
         }, options || {})
     }
 
-    async asyncInit() {
-        if (this.options.projector) {
-            console.log(`GeoJsonLayer ${this.options.id}: Using projector from options`)
-            this.projector = this.options.projector
-        }
-        if (this.options.elevationMap) {
-            console.log(`GeoJsonLayer ${this.options.id}: Using elevationMap from options`)
-            this.elevationMap = this.options.elevationMap
-        }
+    async asyncInit(options: Partial<GeoJsonLayerOptions>) {
+        Object.assign(this.options, options)
+        console.assert(this.options.crsName, `No crsName set for ${this.options.id}`)
 
         const geoJson = await (await fetch(this.url)).json()
+
+        // Set the bounds for this geojson
+        const fromCrsName = geoJson.crs.properties.name
+        const fromBounds = new GeoBounds(fromCrsName, {
+          axisLabels: { x: "longitude", y: "latitude" },
+          x: { min: geoJson.bbox[0], max: geoJson.bbox[2] },
+          y: { min: geoJson.bbox[1], max: geoJson.bbox[3] }
+        })
+
+        this.projector = new GeoProjector(fromBounds, {
+          toCrs: this.options.crsName!,
+          mapWidth: this.options.mapWidth!,
+        })
+
         this.group = this.#parse(geoJson)
         return this
     }
@@ -157,19 +168,19 @@ export class GeoJsonLayer {
         return new THREE.Mesh(geometry, material);
     }
 
-    #latLngToVector3(lonLat: [number, number], ) {
-        const coordinate = this.projector!.forwardToLocal(lonLat) as [number, number]
+    #latLngToVector3(fromCoordinate: [number, number], ) {
+        const toCoordinate = this.projector!.forwardToLocal(fromCoordinate) as [number, number]
 
         let elevation = 0
 
-        if (this.elevationMap && flags.elevation) {
-            elevation = this.elevationMap.getElevationAt(coordinate, {
+        if (this.options.useElevation && this.options.elevationMap && flags.elevation) {
+            elevation = this.options.elevationMap.getElevationAt(toCoordinate, {
                 width: this.projector.mapWidth,
                 height: this.projector.mapHeight,
             })
         }
 
-        return new THREE.Vector3(coordinate[0], coordinate[1], elevation);
+        return new THREE.Vector3(toCoordinate[0], toCoordinate[1], elevation);
     }
 
 }

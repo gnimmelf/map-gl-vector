@@ -6,7 +6,7 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview --host",
-    "gml2geojson": "bun run --watch ./scripts/gml2geojson.bun.ts"
+    "gml2geojson": "bun --watch ./scripts/gml2geojson.bun.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.2.5",
