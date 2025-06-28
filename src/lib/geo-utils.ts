@@ -45,7 +45,6 @@ export async function loadElevationData(url: string) {
 
   const [minLon, minLat, maxLon, maxLat] = image.getBoundingBox();
   const bounds = new GeoBounds(`EPSG:${GeographicTypeGeoKey}`, {
-    axisLabels: { x: "longitude", y: "latitude" },
     x: { min: minLon, max: maxLon },
     y: { min: minLat, max: maxLat }
   })

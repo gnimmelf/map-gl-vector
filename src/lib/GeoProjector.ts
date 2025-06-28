@@ -2,30 +2,30 @@ import proj4 from "proj4"
 import { GeoBounds } from "./GeoBounds"
 
 export type GeoProjectorOptions = {
-    toCrs: string
+    trgtCrsName: string
+    trgtBounds: GeoBounds
     mapWidth: number
     mapHeight?: number
 }
 
 export class GeoProjector {
-    fromBounds: GeoBounds
-    toBounds: GeoBounds
+    srcBounds: GeoBounds
+    trgtBounds: GeoBounds
     mapWidth: number
     mapHeight: number
     #converter: proj4.Converter
 
-    constructor(fromBounds: GeoBounds, options: GeoProjectorOptions) {
-        this.fromBounds = fromBounds
+    constructor(srcBounds: GeoBounds, options: GeoProjectorOptions) {
+        this.srcBounds = srcBounds
         this.mapWidth = options.mapWidth || 1000
 
         // Calculate projection bounds
-        this.toBounds = GeoBounds.fromBounds(fromBounds, {
-            toCrsName: options.toCrs || 'EPSG:25832',
-            axisLabels: { x: "easting", y: "northing" },
+        this.trgtBounds = options.trgtBounds || GeoBounds.fromBounds(srcBounds, {
+            trgtCrsName: options.trgtCrsName,
         })
-        this.mapHeight = this.mapWidth * this.toBounds.ratio
+        this.mapHeight = this.mapWidth * this.trgtBounds.ratio
         // Projector
-        this.#converter = proj4(this.fromBounds.crsName, this.toBounds.crsName);
+        this.#converter = proj4(this.srcBounds.crsName, this.trgtBounds.crsName);
         console.log(this)
     }
 
@@ -44,8 +44,8 @@ export class GeoProjector {
          * then scale to bottom-left [0,0], top-right [mapWidth, mapHeight]
          */
         return [
-            ((converted[0] - this.toBounds.x.min) / this.toBounds.xRange) * this.mapWidth,
-            ((converted[1] - this.toBounds.y.min) / this.toBounds.yRange) * this.mapHeight,
+            ((converted[0] - this.trgtBounds.x.min) / this.trgtBounds.xRange) * this.mapWidth,
+            ((converted[1] - this.trgtBounds.y.min) / this.trgtBounds.yRange) * this.mapHeight,
         ]
     }
 }

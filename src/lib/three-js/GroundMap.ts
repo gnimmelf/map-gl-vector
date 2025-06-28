@@ -4,7 +4,7 @@ import { GeoBounds } from '../GeoBounds'
 
 type Options = {
   dispMapUrl: string
-  crsName: string
+  trgtCrsName: string
   mapWidth?: number
   widthSegments?: number
   mapColor?: THREE.ColorRepresentation
@@ -44,19 +44,18 @@ export class GroundMap {
 
   async asyncInit() {
     const DEM = await loadElevationData(this.options.dispMapUrl);
-    const toBounds = GeoBounds.fromBounds(DEM.bounds, {
-      toCrsName: this.options.crsName,
-      axisLabels: {x: 'longitude', y: 'latitude'}
+    const trgtBounds = GeoBounds.fromBounds(DEM.bounds, {
+      trgtCrsName: this.options.trgtCrsName,
     })
     const { mapWidth, widthSegments } = this.options
-    const mapHeight = Math.floor(mapWidth / toBounds.ratio)
-    const heightSegments = Math.floor(widthSegments / toBounds.ratio)
+    const mapHeight = Math.floor(mapWidth / trgtBounds.ratio)
+    const heightSegments = Math.floor(widthSegments / trgtBounds.ratio)
     // Create THREE.js PlaneGeometry with the converted dimensions
     const plane = new THREE.PlaneGeometry(mapWidth, mapHeight, widthSegments, heightSegments);
     // Calc plane segments lengths
     const planeSeg = {
-      lenX: toBounds.xRange / widthSegments,
-      lenY: toBounds.yRange / heightSegments
+      lenX: trgtBounds.xRange / widthSegments,
+      lenY: trgtBounds.yRange / heightSegments
     }
 
     /**

@@ -21,7 +21,7 @@ export class ElevationMap {
   }
 
   getElevationAt(coordinate: [number, number], map: { width: number, height: number }): number {
-    // Scale to local plane coodinates to DEM
+    // Scale local plane coodinates to DEM
     const rasterX = Math.floor((coordinate[0] / map.width) * this.DEM.width - 1)
     // Invert raster y-axis so that DEM[0,0] matches plane lower-left [0, 0]
     const rasterY = Math.floor(((map.height - coordinate[1]) / map.height) * this.DEM.height - 1);

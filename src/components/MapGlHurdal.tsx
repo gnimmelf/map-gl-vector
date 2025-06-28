@@ -54,10 +54,10 @@ const geoLayers = [
   //   id: "alpineslopes",
   //   color: 0xffffff,
   // }),
-  // new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_hoydekurve.geojson`), {
-  //   id: "heightlines",
-  //   color: 0x00ff00,
-  // }),
+  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_hoydekurve.geojson`), {
+    id: "heightlines",
+    color: 0x00ff00,
+  }),
   // new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_vann.geojson`), {
   //   id: "water",
   //   color: 0x0000ff,
@@ -115,7 +115,7 @@ export const MapGl: Component<{
 
       const groundMap = new GroundMap(scene, {
         dispMapUrl: MAP.elevationMapUrl.href,
-        crsName: MAP.crsName,
+        trgtCrsName: MAP.crsName,
         mapWidth: MAP.width,
         widthSegments: MAP.widthSegments,
         mapColor: 0x004433,
@@ -124,17 +124,11 @@ export const MapGl: Component<{
     }
 
     /**
-     * Compass rose
-     */
-    compass = new CompassRose(camera);
-    await compass.asyncInit();
-
-    /**
      *  Layers
      */
     const world = new LayerContainer({
       geoLayers: geoLayers,
-      crsName: MAP.crsName,
+      trgtCrsName: MAP.crsName,
       mapWidth: MAP.width,
       elevationMap: new ElevationMap(MAP.elevationMapUrl, {
         displacementScale: 15,
@@ -142,6 +136,12 @@ export const MapGl: Component<{
     });
     await world.asyncInit();
     world.addTo(scene);
+
+    /**
+     * Compass rose
+     */
+    compass = new CompassRose(camera);
+    await compass.asyncInit();
   }
 
   /**
@@ -172,6 +172,7 @@ export const MapGl: Component<{
 
   onMount(async () => {
     await createScene();
+
     renderer.setAnimationLoop(animationLoop);
     addEventListener("resize", onResize, false);
     addEventListener(
@@ -182,7 +183,7 @@ export const MapGl: Component<{
       },
       false
     );
-    // setTimeout(() => onResize(), 1000);
+    onResize();
   });
 
   return (
