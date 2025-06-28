@@ -34,7 +34,7 @@ getElevationAt(coordinate: [number, number], map: { width: number, height: numbe
     const rasterIdx = (rasterY * this.DEM.width) + rasterX;
 
     // Get elevation
-    const rasterVal = Math.max(this.DEM.raster[rasterIdx], 1) / this.displacementScale;
+    const rasterVal = Math.max(this.DEM.raster[rasterIdx], 1) * this.displacementScale / 100;
     return rasterVal;
 }
 }

@@ -38,6 +38,7 @@ const MAP = {
   elevationMapUrl: new URL(`${ASSETS_URL}/output_final.tif`),
   width: 1000, // Map max-width-units within the THREEJS coordinatesystem
   widthSegments: 200,
+  displacementScale: 15,
   crsName: "EPSG:25832",
 };
 
@@ -50,18 +51,18 @@ const geoLayers = [
   //     useElevation: false,
   //   }
   // ),
-  // new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_alpinbakke.geojson`), {
-  //   id: "alpineslopes",
-  //   color: 0xffffff,
-  // }),
+  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_vann.geojson`), {
+    id: "water",
+    color: 0x0000ff,
+  }),
+  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_alpinbakke.geojson`), {
+    id: "alpineslopes",
+    color: 0xffffff,
+  }),
   new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_hoydekurve.geojson`), {
     id: "heightlines",
     color: 0x00ff00,
   }),
-  // new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_vann.geojson`), {
-  //   id: "water",
-  //   color: 0x0000ff,
-  // }),
   new GeoJsonLayer(
     new URL(`${MAP.geoJsonBaseUrl}/hurdal_kommunegrense.geojson`),
     {
@@ -131,7 +132,7 @@ export const MapGl: Component<{
       trgtCrsName: MAP.crsName,
       mapWidth: MAP.width,
       elevationMap: new ElevationMap(MAP.elevationMapUrl, {
-        displacementScale: 15,
+        displacementScale: MAP.displacementScale,
       }),
     });
     await world.asyncInit();
