@@ -43,7 +43,7 @@ export class LayerContainer {
       })
     }));
 
-    // TODO! Unify Bounds - Compute combined bounding box
+    // Unify Bounds - Compute combined bounding box
     const unifiedTrgtBounds = new GeoBounds(
       this.options.trgtCrsName,
       layers.reduce((bounds: any, layer: GeoJsonLayer) => {

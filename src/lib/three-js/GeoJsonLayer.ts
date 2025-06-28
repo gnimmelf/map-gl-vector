@@ -177,7 +177,7 @@ export class GeoJsonLayer {
     let elevation = 0
 
     if (this.options.useElevation && this.options.elevationMap && flags.elevation) {
-      elevation = this.options.elevationMap.getElevationAt(toCoordinate, {
+      elevation = this.options.elevationMap.getElevationAt(fromCoordinate, {
         width: this.projector.mapWidth,
         height: this.projector.mapHeight,
       })
