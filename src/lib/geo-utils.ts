@@ -4,6 +4,7 @@ import { GeoBounds } from './GeoBounds';
 
 proj4.defs("EPSG:25832", "+proj=utm +zone=32 +ellps=GRS80 +units=m +no_defs");
 
+// DEM: Digital Elevation Model
 export type DemType = Awaited<ReturnType<typeof loadElevationData>>
 
 // Bilinear interpolation for smoother elevation lookup

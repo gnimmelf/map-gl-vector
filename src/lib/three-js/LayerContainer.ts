@@ -23,7 +23,7 @@ export class LayerContainer {
 
   async asyncInit() {
     if (this.options.elevationMap) {
-      await this.options.elevationMap.asyncInit()
+      await this.options.elevationMap.asyncInit(this.options.trgtCrsName)
     }
 
     if (flags.debug) {
@@ -53,6 +53,7 @@ export class LayerContainer {
         })
 
         console.log({ layerBounds })
+
         return {
           x: {
             min: Math.min(bounds.x.min, layerBounds.x.min),

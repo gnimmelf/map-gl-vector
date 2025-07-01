@@ -12,7 +12,6 @@ export enum Geometries {
 
 export type FeatureConfig = {
     name?: string
-    // `true` to include point-position features
     excludeGeometries?: Geometries[]
     // Remapping to another name
     mapTo?: string

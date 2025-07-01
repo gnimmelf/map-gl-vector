@@ -47,21 +47,30 @@ const geoLayers = [
   //   new URL(`${MAP.geoJsonBaseUrl}/hurdal_kommuneomrade.geojson`),
   //   {
   //     id: "area",
-  //     color: 0x000000,
+  //     color: 0x2E2424,
   //     useElevation: false,
+  //     wireframe: false,
   //   }
   // ),
   new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_vann.geojson`), {
     id: "water",
     color: 0x0000ff,
+    useElevation: true,
+  }),
+  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_myr.geojson`), {
+    id: "water",
+    color: 0x6CAC38,
+    useElevation: true,
   }),
   new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_alpinbakke.geojson`), {
     id: "alpineslopes",
     color: 0xffffff,
+    useElevation: true,
   }),
   new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_hoydekurve.geojson`), {
     id: "heightlines",
-    color: 0x00ff00,
+    color: 0x2B3F2B,
+    useElevation: true,
   }),
   new GeoJsonLayer(
     new URL(`${MAP.geoJsonBaseUrl}/hurdal_kommunegrense.geojson`),
@@ -113,15 +122,6 @@ export const MapGl: Component<{
     if (flags.debug) {
       const axesHelper = new THREE.AxesHelper(1e12);
       scene.add(axesHelper);
-
-      const groundMap = new GroundMap(scene, {
-        dispMapUrl: MAP.elevationMapUrl.href,
-        trgtCrsName: MAP.crsName,
-        mapWidth: MAP.width,
-        widthSegments: MAP.widthSegments,
-        mapColor: 0x004433,
-      });
-      groundMap.asyncInit();
     }
 
     /**

@@ -1,8 +1,8 @@
 import * as THREE from 'three'
-//@ts-expect-error
+import * as turf from "@turf/turf";
+
 import earcut from 'earcut';
 
-import { flags } from '../utils'
 import { GeoProjector } from '../GeoProjector';
 import { ElevationMap } from '../ElevationMap';
 import { GeoBounds } from '../GeoBounds';
@@ -30,7 +30,9 @@ type GeoJsonLayerOptions = {
   color?: THREE.ColorRepresentation
   extrusion?: null | number
   useElevation?: boolean
+  wireframe?: boolean
   mapWidth?: number
+  triangulateStep?: number
 }
 
 /**
@@ -138,24 +140,22 @@ export class GeoJsonLayer {
   #toPolygon(coordinates: [number, number][][]) {
     const vertices: number[] = [];
     const holeIndices: number[] = [];
-    let vertexCount = 0;
 
-    // Process the outer boundary (first ring)
+    // Process the contour (first ring)
     coordinates[0].forEach(coord => {
       const vector3 = this.#latLngToVector3(coord);
       vertices.push(vector3.x, vector3.y, vector3.z);
-      vertexCount++;
     });
 
     // Process holes (subsequent rings)
     for (let i = 1; i < coordinates.length; i++) {
       const hole = coordinates[i];
-      holeIndices.push(vertexCount); // Mark the start index of the hole
+      // Mark the start index of the hole, div by 3 due to vector3 dims
+      holeIndices.push(vertices.length / 3);
 
       hole.forEach(coord => {
         const vector3 = this.#latLngToVector3(coord);
         vertices.push(vector3.x, vector3.y, vector3.z);
-        vertexCount++;
       });
     }
 
@@ -167,7 +167,11 @@ export class GeoJsonLayer {
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
     geometry.setIndex(triangles);
 
-    const material = new THREE.MeshBasicMaterial({ color: this.options.color, side: THREE.DoubleSide });
+    const material = new THREE.MeshBasicMaterial({
+      wireframe: this.options.wireframe,
+      color: this.options.color,
+      side: THREE.DoubleSide
+    });
     return new THREE.Mesh(geometry, material);
   }
 
@@ -177,10 +181,7 @@ export class GeoJsonLayer {
     let elevation = 0
 
     if (this.options.useElevation && this.options.elevationMap) {
-      elevation = this.options.elevationMap.getElevationAt(fromCoordinate, {
-        width: this.projector.mapWidth,
-        height: this.projector.mapHeight,
-      })
+      elevation = this.options.elevationMap.getElevationAt(fromCoordinate)
     }
 
     return new THREE.Vector3(toCoordinate[0], toCoordinate[1], elevation);

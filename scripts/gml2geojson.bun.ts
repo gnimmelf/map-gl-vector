@@ -4,7 +4,7 @@ import { XMLParser } from 'fast-xml-parser'
 import { JSONPath } from 'jsonpath-plus';
 import proj4 from 'proj4'
 
-// TODO! Figure out how to import this dynamically to allow for multiple area-configs
+// TODO! Import this dynamically to allow for multiple area-configs. Hardcoded for now.
 import {
     SOURCE_DIR,
     DEST_DIR,
