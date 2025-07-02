@@ -1,6 +1,8 @@
-# How-to
+# How-to DEM (Digital Elevation Map)
 
 Cropping DTM10 tif-tiles to an area across multiple tiles
+
+DEM = DTM: Digital Terreng Modell
 
 ## Prequisites
 
@@ -34,6 +36,9 @@ Cropping DTM10 tif-tiles to an area across multiple tiles
             - Lower Right (xmax, ymin)
 
 2. Use bounds to extract a crop of the DTM10 tif-tiles
+
+    NOTE! The crop should be bigger than the biggest layer to ensure that layer edges do not accidentally hit outside the DEM
+    and recieve a
 
     For each of the tiles, extract the parts of the area that intersects the tile:
 

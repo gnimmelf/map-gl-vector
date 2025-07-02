@@ -35,7 +35,7 @@ const ASSETS_URL = "https://localhost:3030/assets/";
 
 const MAP = {
   geoJsonBaseUrl: `${ASSETS_URL}/geojson/`,
-  elevationMapUrl: new URL(`${ASSETS_URL}/output_final.tif`),
+  elevationMapUrl: new URL(`${ASSETS_URL}/geotiff.tif`),
   width: 1000, // Map max-width-units within the THREEJS coordinatesystem
   widthSegments: 200,
   displacementScale: 15,
@@ -43,15 +43,6 @@ const MAP = {
 };
 
 const geoLayers = [
-  // new GeoJsonLayer(
-  //   new URL(`${MAP.geoJsonBaseUrl}/hurdal_kommuneomrade.geojson`),
-  //   {
-  //     id: "area",
-  //     color: 0x2E2424,
-  //     useElevation: false,
-  //     wireframe: false,
-  //   }
-  // ),
   new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_vann.geojson`), {
     id: "water",
     color: 0x0000ff,
@@ -59,7 +50,12 @@ const geoLayers = [
   }),
   new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_myr.geojson`), {
     id: "water",
-    color: 0x6CAC38,
+    color: 0x6cac38,
+    useElevation: true,
+  }),
+  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_hoydekurve.geojson`), {
+    id: "heightlines",
+    color: 0x2b3f2b,
     useElevation: true,
   }),
   new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_alpinbakke.geojson`), {
@@ -67,17 +63,12 @@ const geoLayers = [
     color: 0xffffff,
     useElevation: true,
   }),
-  new GeoJsonLayer(new URL(`${MAP.geoJsonBaseUrl}/hurdal_hoydekurve.geojson`), {
-    id: "heightlines",
-    color: 0x2B3F2B,
-    useElevation: true,
-  }),
   new GeoJsonLayer(
     new URL(`${MAP.geoJsonBaseUrl}/hurdal_kommunegrense.geojson`),
     {
       id: "border",
       color: 0xff0000,
-      useElevation: false,
+      useElevation: true,
     }
   ),
 ];
